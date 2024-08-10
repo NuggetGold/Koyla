@@ -59,3 +59,30 @@ client.on('guildBanRemove', async (unban, guild) => {
         }
     });
 });
+
+client.on('messageDelete', async (message, guild) => {
+    if(message.author.bot) return
+    const logs = await message.guild.fetchAuditLogs({
+        type: AuditLogEvent.MessageDelete,
+        limit: 1,
+    });
+    const firstEntry = logs.entries.first();
+    const { executor, target, targetId } = firstEntry;
+    // Ensure the executor is cached
+    const user = await client.users.fetch(executor);
+    id = message.guild.id
+    db.get('SELECT * FROM servers WHERE serverID = ?', [id], (err, row) => {
+        console.log(row.log_channel)
+        channelid = row.log_channel
+        if (row.log_channel) {
+            const embed = new EmbedBuilder()
+                .setTitle(`Журнал Аудита`)
+                .setDescription(`[MESSAGE_REMOVE] \`${executor.tag}\` Удалил сообщение от \`${message.author.tag}\` Cообщение: ${message.content}`)
+                .setColor("Red")
+                .setTimestamp(Date.now())
+
+            const channel = message.guild.channels.cache.get(channelid);
+            channel.send({embeds: [embed]});
+        }
+    });
+})
