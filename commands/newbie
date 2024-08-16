@@ -1,0 +1,62 @@
+/// НОВЫЙ ИГРОК
+client.on('guildMemberAdd', (member) => {
+
+    id = member.guild.id;
+    console.log(member.guild.id)
+    db.get('SELECT * FROM servers WHERE serverID = ?', [id], (err, row) => {
+        console.log(row.newbie_channel)
+        if (row.newbie_channel) {
+
+    const channelId = row.newbie_channel // ID канала, в который будет отправлено приветственное сообщение
+
+            const user = member.user.username;
+            const ping = member.user.id
+            const data = member.user.createdAt;
+            const join = member.guild.joinedAt;
+            const banner = member.guild.banner
+            const avatarUrl = member.displayAvatarURL;
+            const bannerUrl = member.guild.bannerURL();
+
+
+            text = row.newbie_text
+            text = text.replace('{user}', user)
+            text = text.replace('{ping}', `<@${ping}>`)
+            text = text.replace('{data}', data)
+            text = text.replace('{join}', join)
+            text = text.replace('{banner}', banner)
+            text = text.replace('{bannerUrl}', bannerUrl)
+            text = text.replace('{avatarUrl}', avatarUrl)
+            text = text.replace('{new}', '\n')
+
+    console.log(channelId, row.newbie_channel)
+
+
+
+            try{
+                const embed = new EmbedBuilder()
+                    .setTitle(`Новенький на сервере!`)
+                    .setDescription(`${text}`)
+                    .setColor(row.color)
+                    .setTimestamp(Date.now())
+                const channel = member.guild.channels.cache.get(channelId);
+
+                channel.send({embeds: [embed]})
+        }catch (e) {
+                console.log(e)
+                const systemChannel = client.channels.cache.find(channel => channel.type === 'GUILD_TEXT' && channel.name === 'system-channel');
+
+                if (systemChannel) {
+                    const embed = new EmbedBuilder()
+                        .setTitle(`❌ | Ошибка `)
+                        .setDescription(` \`Канал или сообщение не найдены!\` `)
+                        .setColor('FF0000')
+                        .setTimestamp(Date.now())
+                    systemChannel.send({embeds: [embed]});
+                } else {
+                    console.error('System channel not found');
+                }
+
+            }
+        }
+    })
+});
